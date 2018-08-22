@@ -1,0 +1,34 @@
+{
+  "name": "elevaidus",
+  "version": "1.0.0",
+  "description": "A little game I am making",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon ./app.js --exec babel-node -e js",
+    "debug": "node --nolazy --inspect-brk=9229 ./app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RobertHolstein/Elevaidus.git"
+  },
+  "keywords": [
+    "game",
+    "rpg"
+  ],
+  "author": "Robert J Holstein",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RobertHolstein/Elevaidus/issues"
+  },
+  "homepage": "https://github.com/RobertHolstein/Elevaidus#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "nodemon": "^1.18.3",
+    "socket.io": "^2.1.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-stage-0": "^6.24.1"
+  }
+}

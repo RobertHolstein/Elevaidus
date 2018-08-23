@@ -6,30 +6,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <style>
-        form { padding: 20px; position: fixed; bottom: 0; width: 100%; padding-right: 50px;}
         #messages { list-style-type: none; margin: 0; padding: 0; width: 100%;}
-        #messages li { padding: 5px 10px; }
-        #messages li:nth-child(odd) { background: #eee;} 
+        #messages li { background: gray; padding: 5px 10px; }
+        #messages li:nth-child(odd) { background: lightgray;} 
+        body { padding: 0px; margin: 0px; background: black; }
+        .chat { height: calc(100vh - 180px); }
+        .chat-app { border: 3px solid white; padding: 0px; }
     </style>
   </head>
     <body>
         <div class="container-fluid">
             <div class="row">
-                <div class="col-lg-12">
-                    <ul id="messages"></ul>
+                <div class="col-lg-8">
+
                 </div>
-            </div>
-            <div class="fixed-bottom" style="margin:1%;">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <!-- <form> -->
+                <div class="col-lg-4 chat-app">
+                    
+                    <div class="row">
+                        <div class="col-lg-12 chat">
+                            <ul id="messages"></ul>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12">
                             <div class="input-group">
                                 <input type="text" id="messageInput" class="form-control" autocomplete="off" placeholder="message" aria-label="message" aria-describedby="button-addon2">
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="submit" id="chatBtn">send</button>
                                 </div>
                             </div>
-                        <!-- </form> -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -39,24 +45,11 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
         <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/phaser.min.js"></script>
+        <script src="/js/app.js"></script>
+        <script src="/js/chat.js"></script>
         <script>
-            const room = 'world3';
-            const socket = io('/tech');
-
-            socket.on('connect', () => {
-                socket.emit('join', { room: room } );
-            });
-
-            $('#chatBtn').click(() => {
-                let msg = $('#messageInput').val();
-                socket.emit('messagesPush', { msg: msg, room: room } );
-                $('#messageInput').val('');
-            });
             
-            socket.on('messagesReceive', (msg) => {
-                console.log(`messaged received: ${msg}`)
-                $('#messages').append($('<li>').text(msg));
-            });
 
         </script>
   </body>

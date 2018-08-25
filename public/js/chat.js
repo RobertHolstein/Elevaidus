@@ -1,6 +1,6 @@
 var path = window.location.pathname;
 const room = path.split("/").pop();
-const socket = io('/tech');
+//const socket = io('/tech');
 
 socket.on('connect', () => {
     socket.emit('join', { room: room } );

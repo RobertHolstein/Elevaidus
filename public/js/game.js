@@ -1,8 +1,16 @@
+
 var config = {
     type: Phaser.AUTO,
     width: 800,
     height: 600,
     parent: 'game',
+    physics: {
+        default: 'arcade',
+        arcade: {
+          debug: false,
+          gravity: { y: 0 }
+        }
+    },
     scene: {
         preload: preload,
         create: create,
@@ -11,7 +19,7 @@ var config = {
 };
 
 var game = new Phaser.Game(config);
-var self;
+
 
 function preload ()
 {
@@ -22,11 +30,30 @@ function preload ()
 
 function create ()
 {
-    self = this;
-    // ***** socket.io *****
-    this.socket = io('/game');
+    var self = this;
+    this.socket = io();
+    this.otherPlayers = this.physics.add.group();
 
-    // ***** END socket.io *****
+    
+  this.socket.on('currentPlayers', function (players) {
+    Object.keys(players).forEach(function (id) {
+      if (players[id].playerId === self.socket.id) {
+        addPlayer(self, players[id]);
+      } else {
+        addOtherPlayers(self, players[id]);
+      }
+    });
+  });
+  this.socket.on('newPlayer', function (playerInfo) {
+    addOtherPlayers(self, playerInfo);
+  });
+  this.socket.on('disconnect', function (playerId) {
+    self.otherPlayers.getChildren().forEach(function (otherPlayer) {
+      if (playerId === otherPlayer.playerId) {
+        otherPlayer.destroy();
+      }
+    });
+  });
 
     // ***** MAP *****
     this.map = this.add.tilemap('map');
@@ -37,41 +64,6 @@ function create ()
     }
     layer.inputEnabled = true;
     // ***** END MAP *****
-
-    // ***** PLAYERS *****
-    this.otherPlayers = []; //Create emplty array to put players into
-    this.socket.on('updatePlayers', function (players) {
-        Object.keys(players).forEach(function (id) {
-          if (players[id].playerId === self.socket.id) {
-            addPlayer(self, players[id]);
-          } else {
-            addOtherPlayers(self, players[id]);
-          }
-        });
-    });
-
-      this.socket.on('newPlayer', function (playerInfo) {
-        addOtherPlayers(self, playerInfo);
-      });
-
-      this.socket.on('disconnect', function (playerId) {
-        self.otherPlayers.forEach(function (otherPlayer) {
-          if (playerId === otherPlayer.playerId) {
-            otherPlayer.destroy();
-          }
-        });
-      });
-      
-    this.socket.on('playerMoved', (playerInfo) => {
-        self.otherPlayers.forEach( (Player) => {
-            if (playerInfo.playerId === Player.playerId) {
-                Player.setPosition(playerInfo.x, playerInfo.y);
-            }
-        });
-        if(playerInfo.playerId === self.player.playerId){
-            self.player.setPosition(playerInfo.x, playerInfo.y);
-        }
-    });
 
     cursors = this.input.keyboard.createCursorKeys();
 
@@ -99,48 +91,43 @@ function create ()
         frameRate: 3,
         repeat: 0
     });
-    // ***** PLAYERS *****
-
-    this.socket.emit('newplayer');
-    console.log('new player created');
 }
 
 function update ()
 {
     if (cursors.left.isDown) // if the left arrow key is down
     {
-        PlayerMovement('left')
+        PlayerMovement(this, 'left')
         this.player.anims.play('walkLeft', false);
     }
     if (cursors.right.isDown) // if the right arrow key is down
     {
-        PlayerMovement('right');
+        PlayerMovement(this,'right');
         this.player.anims.play('walkRight', true);
     }
     if (cursors.up.isDown)
     {
-        PlayerMovement('up');        
+        PlayerMovement(this, 'up');        
         this.player.anims.play('walkUp', true);
     }
     if (cursors.down.isDown)
     {
-        PlayerMovement('down');        
+        PlayerMovement(this, 'down');        
         this.player.anims.play('walkDown', true);
     }
 }
 
-
 function addPlayer(self, playerInfo) {
-  self.player = self.add.sprite(playerInfo.x,playerInfo.y, playerInfo.sprite);
-  self.player.playerId = playerInfo.playerId;
+  self.player = self.add.sprite(playerInfo.x, playerInfo.y, playerInfo.sprite);
 }
+
 
 function addOtherPlayers(self, playerInfo) {
-  const otherPlayer = self.add.sprite(playerInfo.x,playerInfo.y, playerInfo.sprite);
+  const otherPlayer = self.add.sprite(playerInfo.x, playerInfo.y, playerInfo.sprite);
   otherPlayer.playerId = playerInfo.playerId;
-  self.otherPlayers.push(otherPlayer);
+  self.otherPlayers.add(otherPlayer);
 }
 
-function PlayerMovement(direction){
-    self.socket.emit('playerMovement', direction);
+function PlayerMovement(self, direction){
+    
 }

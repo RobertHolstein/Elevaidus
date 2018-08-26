@@ -95,6 +95,8 @@ function create ()
     }
     layer.inputEnabled = true;
 
+    this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+
     cursors = this.input.keyboard.createCursorKeys();
     this.input.on('pointerdown', (event) =>{
         SendClick(self,event.x,event.y);

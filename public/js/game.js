@@ -1,3 +1,5 @@
+var path = window.location.pathname;
+const room = path.split("/").pop();
 
 var config = {
     type: Phaser.AUTO,
@@ -19,7 +21,6 @@ var config = {
 };
 
 var game = new Phaser.Game(config);
-
 
 function preload ()
 {
@@ -47,6 +48,17 @@ function create ()
   this.socket.on('newPlayer', function (playerInfo) {
     addOtherPlayers(self, playerInfo);
   });
+  this.socket.on('playerMoved', (playerInfo) => {
+    self.otherPlayers.getChildren().forEach(function (otherPlayer) {
+        if (playerInfo.playerId === otherPlayer.playerId) {
+          otherPlayer.setPosition(playerInfo.x, playerInfo.y);
+        }
+    });
+    if(playerInfo.playerId === self.player.playerId) {
+        self.player.setPosition(playerInfo.x, playerInfo.y);    
+        self.cameras.main.startFollow(self.player);
+    }
+  });
   this.socket.on('disconnect', function (playerId) {
     self.otherPlayers.getChildren().forEach(function (otherPlayer) {
       if (playerId === otherPlayer.playerId) {
@@ -54,6 +66,25 @@ function create ()
       }
     });
   });
+
+  this.socket.on('sendPlayer', (playerInfo) =>{
+    if(playerInfo.playerId === self.player.playerId) {
+        SendPlayer(this,playerInfo.x,playerInfo.y)  
+        return
+    }
+    self.otherPlayers.getChildren().forEach(function (otherPlayer) {
+        if (playerInfo.playerId === otherPlayer.playerId) {
+            // SendOtherPlayer(this,otherPlayer,,playerInfo.y)  
+            var tween = self.tweens.add({
+                targets: otherPlayer,
+                x: playerInfo.x,
+                y: playerInfo.y,
+                duration: Phaser.Math.Between(otherPlayer.x,otherPlayer.y,playerInfo.x,playerInfo.y)*8,
+            })
+            return;
+        }
+    });
+    });
 
     // ***** MAP *****
     this.map = this.add.tilemap('map');
@@ -63,9 +94,11 @@ function create ()
         layer = this.map.createStaticLayer(i, tileset, 0, 0);
     }
     layer.inputEnabled = true;
-    // ***** END MAP *****
 
     cursors = this.input.keyboard.createCursorKeys();
+    this.input.on('pointerdown', (event) =>{
+        SendClick(self,event.x,event.y);
+    });
 
     this.anims.create({
         key: 'walkUp',
@@ -91,6 +124,10 @@ function create ()
         frameRate: 3,
         repeat: 0
     });
+    
+    this.socket.on('connect', () => {
+        this.socket.emit('join',  room );
+    });
 }
 
 function update ()
@@ -98,7 +135,7 @@ function update ()
     if (cursors.left.isDown) // if the left arrow key is down
     {
         PlayerMovement(this, 'left')
-        this.player.anims.play('walkLeft', false);
+        this.player.anims.play('walkLeft', true);
     }
     if (cursors.right.isDown) // if the right arrow key is down
     {
@@ -119,15 +156,31 @@ function update ()
 
 function addPlayer(self, playerInfo) {
   self.player = self.add.sprite(playerInfo.x, playerInfo.y, playerInfo.sprite);
+  self.player.playerId = playerInfo.playerId;
+  self.player.room = playerInfo.room;
 }
 
 
 function addOtherPlayers(self, playerInfo) {
   const otherPlayer = self.add.sprite(playerInfo.x, playerInfo.y, playerInfo.sprite);
   otherPlayer.playerId = playerInfo.playerId;
+  otherPlayer.room = playerInfo.room;
   self.otherPlayers.add(otherPlayer);
 }
 
 function PlayerMovement(self, direction){
-    
+    self.socket.emit('playerMovement', direction);
+}
+
+function SendClick(self,x,y){
+    self.socket.emit('click', {x, y});
+}
+
+function SendPlayer(self,x,y){
+    var tween = self.tweens.add({
+        targets: self.player,
+        x: x,
+        y: y,
+        duration: Phaser.Math.Between(self.player.x,self.player.y,x,y)*8,
+    })
 }
